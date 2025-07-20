@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#1e40af">
+    <title>نظام إدارة الطلبات - نسخة شاملة</title>
+    
+    <!-- External CSS & JS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Tajawal', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- مدمج: جميع أنماط CSS -->
+    <style>
+        /* إعدادات عامة للنظام */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
+        }
+
+        /* خلفية متدرجة */
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+        }
+
+        .gradient-bg-secondary {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+        }
+
+        /* رسوم متحركة */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0, -30px, 0); }
+            70% { transform: translate3d(0, -15px, 0); }
+            90% { transform: translate3d(0, -4px, 0); }
+        }
+
+        .slide-in-up {
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        .bounce-animation {
+            animation: bounce 1s;
+        }
+
+        /* تأثيرات الانتقال */
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        .transition-colors {
+            transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .transition-transform {
+            transition: transform 0.3s ease;
+        }
+
+        /* تأثيرات التمرير */
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* بطاقات مخصصة */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .stats-card.success {
+            border-left-color: #10b981;
+        }
+
+        .stats-card.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .stats-card.danger {
+            border-left-color: #ef4444;
+        }
+
+        /* الجداول المحسنة */
+        .custom-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-table thead {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+
+        .custom-table tbody tr:hover {
+            background-color: #f8fafc;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .custom-table tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        /* أزرار مخصصة */
+        .btn-primary {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #047857 0%, #059669 100%);
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+            box-shadow: 0 8px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* النماذج */
+        .custom-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .custom-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .custom-input:invalid {
+            border-color: #ef4444;
+        }
+
+        /* حالات التحميل */
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* إشعارات مخصصة */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            z-index: 9999;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+
+        /* شريط التقدم */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        /* وضع الليل */
+        .dark-mode {
+            background: #111827;
+            color: #f9fafb;
+        }
+
+        .dark-mode .glass-card {
+            background: rgba(31, 41, 55, 0.95);
+            border-color: rgba(75, 85, 99, 0.3);
+        }
+
+        .dark-mode .custom-input {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+
+        .dark-mode .custom-table {
+            background: #1f2937;
+        }
+
+        .dark-mode .custom-table tbody tr:hover {
+            background-color: #374151;
+        }
+
+        /* الاستجابة للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .custom-table {
+                font-size: 14px;
+            }
+            
+            .btn-primary, .btn-secondary {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .notification {
+                left: 16px;
+                right: 16px;
+                transform: none;
+                max-width: none;
+            }
+        }
+
+        /* شاشة التحميل */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        /* أيقونات الحالة */
+        .status-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-pending { background: #f59e0b; }
+        .status-processing { background: #3b82f6; }
+        .status-completed { background: #10b981; }
+        .status-rejected { background: #ef4444; }
+        .status-revision { background: #8b5cf6; }
+
+        /* تأثيرات إضافية */
+        .shadow-custom {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .shadow-custom-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .border-custom {
+            border: 1px solid rgba(209, 213, 219, 0.5);
+        }
+
+        /* تخصيص scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">نظام إدارة الطلبات</h1>
+                        <p class="text-blue-100">نسخة شاملة متكاملة</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <button onclick="toggleTheme()" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="exportData()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                        تصدير البيانات
+                    </button>
+                    <button onclick="showAddOrderModal()" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors font-medium">
+                        طلب جديد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stats-card glass-card p-6 rounded-xl shadow-custom hover-lift transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">إجمالي الطلبات</p>
+                        <p class="text-2xl font-bold text-gray-800" id="totalOrders">0</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card success glass-card p-6 rounded-xl shadow-custom hover-lift transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">مكتملة</p>
+                        <p class="text-2xl font-bold text-green-600" id="completedOrders">0</p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card warning glass-card p-6 rounded-xl shadow-custom hover-lift transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">قيد المعالجة</p>
+                        <p class="text-2xl font-bold text-amber-600" id="processingOrders">0</p>
+                    </div>
+                    <div class="p-3 bg-amber-100 rounded-full">
+                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card glass-card p-6 rounded-xl shadow-custom hover-lift transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">إجمالي الإيرادات</p>
+                        <p class="text-2xl font-bold text-gray-800" id="totalRevenue">0 ر.س</p>
+                    </div>
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="glass-card p-6 rounded-xl shadow-custom mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
+                    <input type="text" id="searchInput" placeholder="ابحث عن الطلبات..." 
+                           class="custom-input" onkeyup="filterOrders()">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                    <select id="statusFilter" class="custom-input" onchange="filterOrders()">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending">قيد المراجعة</option>
+                        <option value="processing">قيد المعالجة</option>
+                        <option value="completed">مكتملة</option>
+                        <option value="rejected">مرفوضة</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">نوع الخدمة</label>
+                    <select id="serviceFilter" class="custom-input" onchange="filterOrders()">
+                        <option value="">جميع الخدمات</option>
+                        <option value="translation">ترجمة</option>
+                        <option value="editing">تحرير وتدقيق</option>
+                        <option value="design">تصميم</option>
+                        <option value="writing">كتابة محتوى</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الأولوية</label>
+                    <select id="priorityFilter" class="custom-input" onchange="filterOrders()">
+                        <option value="">جميع الأولويات</option>
+                        <option value="low">منخفضة</option>
+                        <option value="medium">متوسطة</option>
+                        <option value="high">عالية</option>
+                        <option value="urgent">عاجل</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="custom-table rounded-xl shadow-custom overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-white">
+                            <th class="px-6 py-4 text-right text-sm font-medium">رقم الطلب</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">العميل</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">نوع الخدمة</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">العنوان</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">الحالة</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">الأولوية</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">السعر</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">تاريخ الإنشاء</th>
+                            <th class="px-6 py-4 text-right text-sm font-medium">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- سيتم تعبئة البيانات هنا بواسطة JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex justify-between items-center mt-6">
+            <div class="text-sm text-gray-700">
+                عرض <span id="currentStart">1</span> إلى <span id="currentEnd">10</span> من <span id="totalCount">0</span> نتيجة
+            </div>
+            <div class="flex space-x-2 space-x-reverse">
+                <button onclick="changePage(-1)" class="btn-secondary">السابق</button>
+                <span id="pageInfo" class="px-4 py-2 text-sm text-gray-700">الصفحة 1</span>
+                <button onclick="changePage(1)" class="btn-secondary">التالي</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Order Modal -->
+    <div id="addOrderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-800">طلب جديد</h2>
+                <button onclick="hideAddOrderModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="addOrderForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
+                        <input type="text" id="clientName" class="custom-input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
+                        <input type="email" id="clientEmail" class="custom-input" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
+                        <input type="tel" id="clientPhone" class="custom-input" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">نوع الخدمة</label>
+                        <select id="serviceType" class="custom-input" required>
+                            <option value="">اختر نوع الخدمة</option>
+                            <option value="translation">ترجمة</option>
+                            <option value="editing">تحرير وتدقيق</option>
+                            <option value="design">تصميم</option>
+                            <option value="writing">كتابة محتوى</option>
+                            <option value="research">بحث أكاديمي</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">عنوان الطلب</label>
+                    <input type="text" id="orderTitle" class="custom-input" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">وصف تفصيلي للطلب</label>
+                    <textarea id="orderDescription" rows="4" class="custom-input" required></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الأولوية</label>
+                        <select id="orderPriority" class="custom-input" required>
+                            <option value="low">منخفضة</option>
+                            <option value="medium" selected>متوسطة</option>
+                            <option value="high">عالية</option>
+                            <option value="urgent">عاجل</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">موعد التسليم المطلوب</label>
+                        <input type="date" id="deliveryDate" class="custom-input" required>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">السعر المتوقع (ريال سعودي)</label>
+                    <input type="number" id="estimatedPrice" min="0" step="0.01" class="custom-input">
+                </div>
+                
+                <div class="flex justify-end space-x-4 space-x-reverse">
+                    <button type="button" onclick="hideAddOrderModal()" class="btn-secondary">إلغاء</button>
+                    <button type="submit" class="btn-primary">حفظ الطلب</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notificationsContainer"></div>
+
+    <!-- مدمج: جميع أكواد JavaScript -->
+    <script>
+        // ===== إعدادات النظام والثوابت =====
+        const CONFIG = {
+            // إعدادات التطبيق
+            APP_NAME: 'نظام إدارة الطلبات',
+            VERSION: '2.0.0',
+            
+            // أنواع الخدمات
+            SERVICE_TYPES: {
+                translation: { ar: 'ترجمة', en: 'Translation', icon: '🌐', color: '#3b82f6' },
+                editing: { ar: 'تحرير وتدقيق', en: 'Editing & Proofreading', icon: '✏️', color: '#10b981' },
+                design: { ar: 'تصميم', en: 'Design', icon: '🎨', color: '#8b5cf6' },
+                writing: { ar: 'كتابة محتوى', en: 'Content Writing', icon: '📝', color: '#f59e0b' },
+                research: { ar: 'بحث أكاديمي', en: 'Academic Research', icon: '🔬', color: '#ef4444' }
+            },
+            
+            // حالات الطلبات
+            ORDER_STATUSES: {
+                pending: { ar: 'قيد المراجعة', en: 'Pending Review', color: '#f59e0b', icon: '⏳' },
+                processing: { ar: 'قيد المعالجة', en: 'In Progress', color: '#3b82f6', icon: '⚙️' },
+                revision: { ar: 'تحتاج مراجعة', en: 'Needs Revision', color: '#8b5cf6', icon: '🔄' },
+                completed: { ar: 'مكتملة', en: 'Completed', color: '#10b981', icon: '✅' },
+                delivered: { ar: 'تم التسليم', en: 'Delivered', color: '#059669', icon: '🚚' },
+                rejected: { ar: 'مرفوضة', en: 'Rejected', color: '#ef4444', icon: '❌' },
+                cancelled: { ar: 'ملغية', en: 'Cancelled', color: '#6b7280', icon: '🚫' }
+            },
+            
+            // مستويات الأولوية
+            PRIORITY_LEVELS: {
+                low: { ar: 'منخفضة', en: 'Low', color: '#6b7280', icon: '⬇️' },
+                medium: { ar: 'متوسطة', en: 'Medium', color: '#3b82f6', icon: '➡️' },
+                high: { ar: 'عالية', en: 'High', color: '#f59e0b', icon: '⬆️' },
+                urgent: { ar: 'عاجل', en: 'Urgent', color: '#ef4444', icon: '🔥' }
+            },
+            
+            // أنواع الإشعارات
+            NOTIFICATION_TYPES: {
+                success: { color: '#10b981', icon: '✅', duration: 3000 },
+                error: { color: '#ef4444', icon: '❌', duration: 5000 },
+                warning: { color: '#f59e0b', icon: '⚠️', duration: 4000 },
+                info: { color: '#3b82f6', icon: 'ℹ️', duration: 3000 }
+            },
+            
+            // إعدادات الجدولة والعرض
+            PAGINATION: {
+                itemsPerPage: 10,
+                maxVisiblePages: 5
+            },
+            
+            // إعدادات localStorage
+            STORAGE_KEYS: {
+                orders: 'orders_data',
+                clients: 'clients_data',
+                settings: 'app_settings',
+                theme: 'app_theme'
+            },
+            
+            // إعدادات التصدير
+            EXPORT_FORMATS: {
+                csv: { name: 'CSV', extension: '.csv', mimeType: 'text/csv' },
+                json: { name: 'JSON', extension: '.json', mimeType: 'application/json' },
+                pdf: { name: 'PDF', extension: '.pdf', mimeType: 'application/pdf' }
+            }
+        };
+
+        // ===== إدارة البيانات =====
+        class DataManager {
+            constructor() {
+                this.orders = this.loadOrders();
+                this.clients = this.loadClients();
+                this.currentPage = 1;
+                this.filteredOrders = [...this.orders];
+                this.initializeSampleData();
+            }
+
+            // تحميل الطلبات من localStorage
+            loadOrders() {
+                const stored = localStorage.getItem(CONFIG.STORAGE_KEYS.orders);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            // تحميل العملاء من localStorage
+            loadClients() {
+                const stored = localStorage.getItem(CONFIG.STORAGE_KEYS.clients);
+                return stored ? JSON.parse(stored) : [];
+            }
+
+            // حفظ البيانات في localStorage
+            saveOrders() {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.orders, JSON.stringify(this.orders));
+            }
+
+            saveClients() {
+                localStorage.setItem(CONFIG.STORAGE_KEYS.clients, JSON.stringify(this.clients));
+            }
+
+            // إنشاء بيانات تجريبية
+            initializeSampleData() {
+                if (this.orders.length === 0) {
+                    this.generateSampleData();
+                }
+            }
+
+            generateSampleData() {
+                const sampleClients = [
+                    { id: 1, name: 'أحمد محمد العلي', email: 'ahmed.ali@email.com', phone: '0501234567' },
+                    { id: 2, name: 'فاطمة أحمد الزهراني', email: 'fatima.zahrani@email.com', phone: '0507654321' },
+                    { id: 3, name: 'شركة النجاح للتقنية', email: 'info@najah-tech.com', phone: '0551239876' },
+                    { id: 4, name: 'سارة عبدالله الحربي', email: 'sara.harbi@email.com', phone: '0598765432' },
+                    { id: 5, name: 'محمد سعد العتيبي', email: 'mohammed.otaibi@email.com', phone: '0543217890' }
+                ];
+
+                const sampleOrders = [
+                    {
+                        id: 1,
+                        orderNumber: 'ORD-001',
+                        clientId: 1,
+                        serviceType: 'translation',
+                        title: 'ترجمة وثائق قانونية',
+                        description: 'ترجمة وثائق قانونية من الإنجليزية إلى العربية شاملة العقود والاتفاقيات',
+                        status: 'completed',
+                        priority: 'high',
+                        estimatedPrice: 1500,
+                        finalPrice: 1500,
+                        paymentStatus: 'paid',
+                        createdAt: new Date('2024-01-15').toISOString(),
+                        deliveryDate: new Date('2024-01-25').toISOString(),
+                        rating: 5,
+                        notes: 'عميل مهم - إنجاز سريع'
+                    },
+                    {
+                        id: 2,
+                        orderNumber: 'ORD-002',
+                        clientId: 2,
+                        serviceType: 'editing',
+                        title: 'تدقيق رسالة ماجستير',
+                        description: 'تدقيق لغوي شامل لرسالة ماجستير في الأدب العربي',
+                        status: 'processing',
+                        priority: 'medium',
+                        estimatedPrice: 800,
+                        finalPrice: null,
+                        paymentStatus: 'pending',
+                        createdAt: new Date('2024-01-18').toISOString(),
+                        deliveryDate: new Date('2024-01-30').toISOString(),
+                        rating: null,
+                        notes: 'رسالة ماجستير - دقة عالية مطلوبة'
+                    },
+                    {
+                        id: 3,
+                        orderNumber: 'ORD-003',
+                        clientId: 3,
+                        serviceType: 'design',
+                        title: 'تصميم هوية بصرية',
+                        description: 'تصميم هوية بصرية متكاملة لشركة ناشئة',
+                        status: 'pending',
+                        priority: 'high',
+                        estimatedPrice: 3000,
+                        finalPrice: null,
+                        paymentStatus: 'pending',
+                        createdAt: new Date('2024-01-20').toISOString(),
+                        deliveryDate: new Date('2024-02-05').toISOString(),
+                        rating: null,
+                        notes: 'مشروع كبير - عدة مراحل'
+                    },
+                    {
+                        id: 4,
+                        orderNumber: 'ORD-004',
+                        clientId: 4,
+                        serviceType: 'writing',
+                        title: 'كتابة محتوى تسويقي',
+                        description: 'كتابة محتوى تسويقي إبداعي لموقع إلكتروني',
+                        status: 'revision',
+                        priority: 'medium',
+                        estimatedPrice: 1200,
+                        finalPrice: null,
+                        paymentStatus: 'pending',
+                        createdAt: new Date('2024-01-22').toISOString(),
+                        deliveryDate: new Date('2024-01-28').toISOString(),
+                        rating: null,
+                        notes: 'طلب تعديلات من العميل'
+                    },
+                    {
+                        id: 5,
+                        orderNumber: 'ORD-005',
+                        clientId: 5,
+                        serviceType: 'research',
+                        title: 'بحث أكاديمي في تكنولوجيا المعلومات',
+                        description: 'إعداد بحث شامل في مجال تكنولوجيا المعلومات',
+                        status: 'rejected',
+                        priority: 'low',
+                        estimatedPrice: 2000,
+                        finalPrice: null,
+                        paymentStatus: 'pending',
+                        createdAt: new Date('2024-01-25').toISOString(),
+                        deliveryDate: new Date('2024-02-01').toISOString(),
+                        rating: null,
+                        notes: 'متطلبات غير واضحة - رفض مؤقت'
+                    }
+                ];
+
+                this.clients = sampleClients;
+                this.orders = sampleOrders;
+                this.saveClients();
+                this.saveOrders();
+            }
+
+            // إضافة طلب جديد
+            addOrder(orderData) {
+                const newId = Math.max(...this.orders.map(o => o.id), 0) + 1;
+                const orderNumber = `ORD-${String(newId).padStart(3, '0')}`;
+                
+                const newOrder = {
+                    id: newId,
+                    orderNumber,
+                    ...orderData,
+                    status: 'pending',
+                    paymentStatus: 'pending',
+                    createdAt: new Date().toISOString(),
+                    rating: null,
+                    finalPrice: null
+                };
+
+                this.orders.unshift(newOrder);
+                this.saveOrders();
+                return newOrder;
+            }
+
+            // تحديث طلب
+            updateOrder(orderId, updates) {
+                const index = this.orders.findIndex(o => o.id === orderId);
+                if (index !== -1) {
+                    this.orders[index] = { ...this.orders[index], ...updates };
+                    this.saveOrders();
+                    return this.orders[index];
+                }
+                return null;
+            }
+
+            // حذف طلب
+            deleteOrder(orderId) {
+                const index = this.orders.findIndex(o => o.id === orderId);
+                if (index !== -1) {
+                    this.orders.splice(index, 1);
+                    this.saveOrders();
+                    return true;
+                }
+                return false;
+            }
+
+            // الحصول على طلب بالمعرف
+            getOrder(orderId) {
+                return this.orders.find(o => o.id === orderId);
+            }
+
+            // الحصول على عميل بالمعرف
+            getClient(clientId) {
+                return this.clients.find(c => c.id === clientId);
+            }
+
+            // فلترة الطلبات
+            filterOrders(filters) {
+                let filtered = [...this.orders];
+
+                if (filters.search) {
+                    const searchTerm = filters.search.toLowerCase();
+                    filtered = filtered.filter(order => {
+                        const client = this.getClient(order.clientId);
+                        return (
+                            order.orderNumber.toLowerCase().includes(searchTerm) ||
+                            order.title.toLowerCase().includes(searchTerm) ||
+                            order.description.toLowerCase().includes(searchTerm) ||
+                            (client && client.name.toLowerCase().includes(searchTerm))
+                        );
+                    });
+                }
+
+                if (filters.status) {
+                    filtered = filtered.filter(order => order.status === filters.status);
+                }
+
+                if (filters.serviceType) {
+                    filtered = filtered.filter(order => order.serviceType === filters.serviceType);
+                }
+
+                if (filters.priority) {
+                    filtered = filtered.filter(order => order.priority === filters.priority);
+                }
+
+                this.filteredOrders = filtered;
+                return filtered;
+            }
+
+            // ترتيب الطلبات
+            sortOrders(field, direction = 'desc') {
+                this.filteredOrders.sort((a, b) => {
+                    let aValue = a[field];
+                    let bValue = b[field];
+
+                    if (field === 'clientName') {
+                        aValue = this.getClient(a.clientId)?.name || '';
+                        bValue = this.getClient(b.clientId)?.name || '';
+                    }
+
+                    if (typeof aValue === 'string') {
+                        aValue = aValue.toLowerCase();
+                        bValue = bValue.toLowerCase();
+                    }
+
+                    if (direction === 'asc') {
+                        return aValue > bValue ? 1 : -1;
+                    } else {
+                        return aValue < bValue ? 1 : -1;
+                    }
+                });
+            }
+
+            // الحصول على إحصائيات
+            getStatistics() {
+                const total = this.orders.length;
+                const completed = this.orders.filter(o => o.status === 'completed').length;
+                const processing = this.orders.filter(o => o.status === 'processing').length;
+                const pending = this.orders.filter(o => o.status === 'pending').length;
+                const revenue = this.orders
+                    .filter(o => o.paymentStatus === 'paid' && o.finalPrice)
+                    .reduce((sum, o) => sum + o.finalPrice, 0);
+
+                return { total, completed, processing, pending, revenue };
+            }
+
+            // تصدير البيانات
+            exportToCSV() {
+                const headers = ['رقم الطلب', 'العميل', 'نوع الخدمة', 'العنوان', 'الحالة', 'الأولوية', 'السعر', 'تاريخ الإنشاء'];
+                const rows = this.orders.map(order => {
+                    const client = this.getClient(order.clientId);
+                    return [
+                        order.orderNumber,
+                        client?.name || '',
+                        CONFIG.SERVICE_TYPES[order.serviceType]?.ar || order.serviceType,
+                        order.title,
+                        CONFIG.ORDER_STATUSES[order.status]?.ar || order.status,
+                        CONFIG.PRIORITY_LEVELS[order.priority]?.ar || order.priority,
+                        order.finalPrice || order.estimatedPrice || '',
+                        new Date(order.createdAt).toLocaleDateString('ar-SA')
+                    ];
+                });
+
+                const csvContent = [headers, ...rows]
+                    .map(row => row.map(cell => `"${cell}"`).join(','))
+                    .join('\n');
+
+                return csvContent;
+            }
+
+            exportToJSON() {
+                return JSON.stringify({
+                    orders: this.orders,
+                    clients: this.clients,
+                    exportDate: new Date().toISOString(),
+                    version: CONFIG.VERSION
+                }, null, 2);
+            }
+        }
+
+        // ===== وظائف مساعدة =====
+        class Utils {
+            // تنسيق التاريخ
+            static formatDate(dateString, format = 'short') {
+                const date = new Date(dateString);
+                const options = {
+                    short: { year: 'numeric', month: '2-digit', day: '2-digit' },
+                    long: { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' },
+                    time: { hour: '2-digit', minute: '2-digit' }
+                };
+                
+                return date.toLocaleDateString('ar-SA', options[format]);
+            }
+
+            // تنسيق الأرقام
+            static formatNumber(number, decimals = 0) {
+                return new Intl.NumberFormat('ar-SA', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }).format(number);
+            }
+
+            // تنسيق العملة
+            static formatCurrency(amount) {
+                return new Intl.NumberFormat('ar-SA', {
+                    style: 'currency',
+                    currency: 'SAR'
+                }).format(amount);
+            }
+
+            // تنظيف النص
+            static sanitizeText(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // إنشاء معرف فريد
+            static generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+
+            // نسخ إلى الحافظة
+            static async copyToClipboard(text) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (err) {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return successful;
+                }
+            }
+
+            // تحويل إلى slug
+            static slugify(text) {
+                return text
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/[\s_-]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            // التحقق من صحة البريد الإلكتروني
+            static isValidEmail(email) {
+                const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return regex.test(email);
+            }
+
+            // التحقق من صحة رقم الهاتف السعودي
+            static isValidSaudiPhone(phone) {
+                const regex = /^(05|5)[0-9]{8}$/;
+                return regex.test(phone.replace(/\s+/g, ''));
+            }
+
+            // تأخير تنفيذ الدالة (debounce)
+            static debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // تحويل الملف إلى Base64
+            static fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
+            }
+
+            // تحميل ملف
+            static downloadFile(content, filename, mimeType) {
+                const blob = new Blob([content], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            // الحصول على لون عشوائي
+            static getRandomColor() {
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            // تحويل HEX إلى RGB
+            static hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+
+            // التحقق من دعم الميزة
+            static supportsFeature(feature) {
+                switch (feature) {
+                    case 'localStorage':
+                        return typeof Storage !== 'undefined';
+                    case 'clipboard':
+                        return navigator.clipboard !== undefined;
+                    case 'fileApi':
+                        return window.File && window.FileReader && window.FileList && window.Blob;
+                    case 'geolocation':
+                        return navigator.geolocation !== undefined;
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        // ===== نظام الإشعارات =====
+        class NotificationManager {
+            constructor() {
+                this.container = document.getElementById('notificationsContainer') || this.createContainer();
+                this.notifications = [];
+                this.sounds = this.initializeSounds();
+            }
+
+            createContainer() {
+                const container = document.createElement('div');
+                container.id = 'notificationsContainer';
+                container.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 10000;
+                    pointer-events: none;
+                `;
+                document.body.appendChild(container);
+                return container;
+            }
+
+            initializeSounds() {
+                return {
+                    success: this.createSound('success'),
+                    error: this.createSound('error'),
+                    warning: this.createSound('warning'),
+                    info: this.createSound('info')
+                };
+            }
+
+            createSound(type) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    return {
+                        play: () => {
+                            const frequencies = {
+                                success: [523.25, 659.25, 783.99], // C5, E5, G5
+                                error: [220, 185, 147], // A3, F#3, D3
+                                warning: [440, 554.37], // A4, C#5
+                                info: [261.63, 329.63, 392] // C4, E4, G4
+                            };
+                            
+                            const freq = frequencies[type] || frequencies.info;
+                            freq.forEach((f, i) => {
+                                setTimeout(() => this.playTone(audioContext, f, 0.1), i * 100);
+                            });
+                        }
+                    };
+                } catch (e) {
+                    return { play: () => {} }; // Fallback silent sound
+                }
+            }
+
+            playTone(audioContext, frequency, duration) {
+                try {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration);
+                } catch (e) {
+                    // Silent fail for audio issues
+                }
+            }
+
+            show(message, type = 'info', options = {}) {
+                const config = {
+                    duration: CONFIG.NOTIFICATION_TYPES[type]?.duration || 3000,
+                    playSound: true,
+                    persistent: false,
+                    actions: [],
+                    ...options
+                };
+
+                const notification = this.createNotification(message, type, config);
+                this.notifications.push(notification);
+                
+                if (config.playSound && this.sounds[type]) {
+                    setTimeout(() => this.sounds[type].play(), 100);
+                }
+
+                if (!config.persistent) {
+                    setTimeout(() => this.hide(notification.id), config.duration);
+                }
+
+                return notification.id;
+            }
+
+            createNotification(message, type, config) {
+                const id = Utils.generateId();
+                const notification = document.createElement('div');
+                
+                notification.id = `notification-${id}`;
+                notification.className = `notification ${type} slide-in-up`;
+                notification.style.cssText = `
+                    background: linear-gradient(135deg, ${CONFIG.NOTIFICATION_TYPES[type].color}dd, ${CONFIG.NOTIFICATION_TYPES[type].color});
+                    color: white;
+                    padding: 16px 20px;
+                    margin-bottom: 10px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    max-width: 400px;
+                    pointer-events: auto;
+                    position: relative;
+                    backdrop-filter: blur(10px);
+                `;
+
+                const icon = CONFIG.NOTIFICATION_TYPES[type].icon;
+                const closeButton = '<button onclick="notifications.hide(\'' + id + '\')" style="position: absolute; top: 8px; left: 8px; background: none; border: none; color: white; font-size: 18px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">×</button>';
+                
+                notification.innerHTML = `
+                    ${closeButton}
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <span style="font-size: 20px; flex-shrink: 0;">${icon}</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; margin-bottom: 4px;">${Utils.sanitizeText(message)}</div>
+                            ${config.actions.length > 0 ? this.createActionButtons(config.actions) : ''}
+                        </div>
+                    </div>
+                `;
+
+                this.container.appendChild(notification);
+                
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    notification.style.transform = 'translateY(0)';
+                    notification.style.opacity = '1';
+                });
+
+                return { id, element: notification };
+            }
+
+            createActionButtons(actions) {
+                return `
+                    <div style="margin-top: 8px; display: flex; gap: 8px;">
+                        ${actions.map(action => `
+                            <button onclick="${action.handler}" style="
+                                background: rgba(255,255,255,0.2);
+                                border: 1px solid rgba(255,255,255,0.3);
+                                color: white;
+                                padding: 4px 12px;
+                                border-radius: 6px;
+                                font-size: 12px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                               onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                                ${action.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            hide(id) {
+                const element = document.getElementById(`notification-${id}`);
+                if (element) {
+                    element.style.transform = 'translateY(-100%)';
+                    element.style.opacity = '0';
+                    setTimeout(() => {
+                        if (element.parentNode) {
+                            element.parentNode.removeChild(element);
+                        }
+                    }, 300);
+                }
+                
+                this.notifications = this.notifications.filter(n => n.id !== id);
+            }
+
+            clear() {
+                this.notifications.forEach(n => this.hide(n.id));
+            }
+
+            success(message, options = {}) {
+                return this.show(message, 'success', options);
+            }
+
+            error(message, options = {}) {
+                return this.show(message, 'error', options);
+            }
+
+            warning(message, options = {}) {
+                return this.show(message, 'warning', options);
+            }
+
+            info(message, options = {}) {
+                return this.show(message, 'info', options);
+            }
+
+            confirm(message, onConfirm, onCancel = null) {
+                return this.show(message, 'warning', {
+                    persistent: true,
+                    playSound: true,
+                    actions: [
+                        {
+                            label: 'تأكيد',
+                            handler: `(() => {
+                                notifications.hide('${Utils.generateId()}');
+                                (${onConfirm.toString()})();
+                            })()`
+                        },
+                        {
+                            label: 'إلغاء',
+                            handler: `(() => {
+                                notifications.hide('${Utils.generateId()}');
+                                ${onCancel ? `(${onCancel.toString()})();` : ''}
+                            })()`
+                        }
+                    ]
+                });
+            }
+        }
+
+        // ===== التطبيق الرئيسي =====
+        class OrderManagementApp {
+            constructor() {
+                this.dataManager = new DataManager();
+                this.notifications = new NotificationManager();
+                this.currentPage = 1;
+                this.isDarkMode = localStorage.getItem(CONFIG.STORAGE_KEYS.theme) === 'dark';
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.updateStatistics();
+                this.renderOrders();
+                this.applyTheme();
+                this.setupKeyboardShortcuts();
+                
+                // Show welcome notification
+                setTimeout(() => {
+                    this.notifications.success('مرحباً بك في نظام إدارة الطلبات المطور! 🎉');
+                }, 1000);
+            }
+
+            bindEvents() {
+                // Form submission
+                document.getElementById('addOrderForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleAddOrder();
+                });
+
+                // Search with debounce
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('keyup', Utils.debounce(() => {
+                        this.filterOrders();
+                    }, 300));
+                }
+
+                // Filter changes
+                ['statusFilter', 'serviceFilter', 'priorityFilter'].forEach(filterId => {
+                    const element = document.getElementById(filterId);
+                    if (element) {
+                        element.addEventListener('change', () => this.filterOrders());
+                    }
+                });
+
+                // Set minimum date for delivery date
+                const deliveryDateInput = document.getElementById('deliveryDate');
+                if (deliveryDateInput) {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    deliveryDateInput.min = tomorrow.toISOString().split('T')[0];
+                }
+            }
+
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    // Ctrl/Cmd + N: New order
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                        e.preventDefault();
+                        this.showAddOrderModal();
+                    }
+
+                    // Ctrl/Cmd + E: Export data
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                        e.preventDefault();
+                        this.exportData();
+                    }
+
+                    // Ctrl/Cmd + D: Toggle dark mode
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                        e.preventDefault();
+                        this.toggleTheme();
+                    }
+
+                    // Escape: Close modals
+                    if (e.key === 'Escape') {
+                        this.hideAddOrderModal();
+                    }
+                });
+            }
+
+            handleAddOrder() {
+                const formData = new FormData(document.getElementById('addOrderForm'));
+                const orderData = {
+                    clientId: this.getOrCreateClient({
+                        name: formData.get('clientName') || document.getElementById('clientName').value,
+                        email: formData.get('clientEmail') || document.getElementById('clientEmail').value,
+                        phone: formData.get('clientPhone') || document.getElementById('clientPhone').value
+                    }),
+                    serviceType: document.getElementById('serviceType').value,
+                    title: document.getElementById('orderTitle').value,
+                    description: document.getElementById('orderDescription').value,
+                    priority: document.getElementById('orderPriority').value,
+                    deliveryDate: document.getElementById('deliveryDate').value,
+                    estimatedPrice: parseFloat(document.getElementById('estimatedPrice').value) || 0
+                };
+
+                // Validation
+                if (!this.validateOrderData(orderData)) {
+                    return;
+                }
+
+                try {
+                    const newOrder = this.dataManager.addOrder(orderData);
+                    this.notifications.success(`تم إضافة الطلب ${newOrder.orderNumber} بنجاح! ✅`);
+                    this.hideAddOrderModal();
+                    this.updateStatistics();
+                    this.renderOrders();
+                    
+                    // Reset form
+                    document.getElementById('addOrderForm').reset();
+                } catch (error) {
+                    this.notifications.error('حدث خطأ أثناء إضافة الطلب. يرجى المحاولة مرة أخرى.');
+                    console.error('Error adding order:', error);
+                }
+            }
+
+            validateOrderData(data) {
+                if (!data.serviceType) {
+                    this.notifications.error('يرجى اختيار نوع الخدمة');
+                    return false;
+                }
+
+                if (!data.title.trim()) {
+                    this.notifications.error('يرجى إدخال عنوان الطلب');
+                    return false;
+                }
+
+                if (!data.description.trim()) {
+                    this.notifications.error('يرجى إدخال وصف تفصيلي للطلب');
+                    return false;
+                }
+
+                if (!data.deliveryDate) {
+                    this.notifications.error('يرجى تحديد موعد التسليم المطلوب');
+                    return false;
+                }
+
+                // Check if delivery date is in the future
+                const deliveryDate = new Date(data.deliveryDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (deliveryDate <= today) {
+                    this.notifications.error('موعد التسليم يجب أن يكون في المستقبل');
+                    return false;
+                }
+
+                return true;
+            }
+
+            getOrCreateClient(clientData) {
+                // Check if client exists by email or phone
+                let existingClient = this.dataManager.clients.find(c => 
+                    c.email === clientData.email || c.phone === clientData.phone
+                );
+
+                if (existingClient) {
+                    return existingClient.id;
+                }
+
+                // Create new client
+                const newId = Math.max(...this.dataManager.clients.map(c => c.id), 0) + 1;
+                const newClient = {
+                    id: newId,
+                    name: clientData.name,
+                    email: clientData.email,
+                    phone: clientData.phone,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.dataManager.clients.push(newClient);
+                this.dataManager.saveClients();
+                return newId;
+            }
+
+            updateStatistics() {
+                const stats = this.dataManager.getStatistics();
+                
+                document.getElementById('totalOrders').textContent = stats.total;
+                document.getElementById('completedOrders').textContent = stats.completed;
+                document.getElementById('processingOrders').textContent = stats.processing;
+                document.getElementById('totalRevenue').textContent = Utils.formatCurrency(stats.revenue);
+            }
+
+            renderOrders() {
+                const tbody = document.getElementById('ordersTableBody');
+                if (!tbody) return;
+
+                const startIndex = (this.currentPage - 1) * CONFIG.PAGINATION.itemsPerPage;
+                const endIndex = startIndex + CONFIG.PAGINATION.itemsPerPage;
+                const pageOrders = this.dataManager.filteredOrders.slice(startIndex, endIndex);
+
+                if (pageOrders.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium">لا توجد طلبات</p>
+                                    <p class="text-sm">ابدأ بإضافة طلب جديد</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = pageOrders.map(order => {
+                    const client = this.dataManager.getClient(order.clientId);
+                    const status = CONFIG.ORDER_STATUSES[order.status];
+                    const priority = CONFIG.PRIORITY_LEVELS[order.priority];
+                    const serviceType = CONFIG.SERVICE_TYPES[order.serviceType];
+
+                    return `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                ${order.orderNumber}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div>
+                                    <div class="font-medium">${client?.name || 'غير محدد'}</div>
+                                    <div class="text-xs text-gray-500">${client?.phone || ''}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                                      style="background-color: ${serviceType?.color}20; color: ${serviceType?.color}">
+                                    ${serviceType?.icon} ${serviceType?.ar}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                                ${order.title}
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="status-icon" style="background-color: ${status?.color}">
+                                    ${status?.icon}
+                                </span>
+                                <span class="mr-2 text-sm" style="color: ${status?.color}">
+                                    ${status?.ar}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                      style="background-color: ${priority?.color}20; color: ${priority?.color}">
+                                    ${priority?.icon} ${priority?.ar}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                ${order.finalPrice ? Utils.formatCurrency(order.finalPrice) : 
+                                  (order.estimatedPrice ? Utils.formatCurrency(order.estimatedPrice) + ' (تقديري)' : 'غير محدد')}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                ${Utils.formatDate(order.createdAt)}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <div class="flex space-x-2 space-x-reverse">
+                                    <button onclick="app.editOrder(${order.id})" 
+                                            class="text-blue-600 hover:text-blue-800 transition-colors"
+                                            title="تعديل">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="app.viewOrder(${order.id})" 
+                                            class="text-green-600 hover:text-green-800 transition-colors"
+                                            title="عرض">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="app.deleteOrder(${order.id})" 
+                                            class="text-red-600 hover:text-red-800 transition-colors"
+                                            title="حذف">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                this.updatePagination();
+            }
+
+            updatePagination() {
+                const totalItems = this.dataManager.filteredOrders.length;
+                const totalPages = Math.ceil(totalItems / CONFIG.PAGINATION.itemsPerPage);
+                const startItem = (this.currentPage - 1) * CONFIG.PAGINATION.itemsPerPage + 1;
+                const endItem = Math.min(this.currentPage * CONFIG.PAGINATION.itemsPerPage, totalItems);
+
+                document.getElementById('currentStart').textContent = totalItems > 0 ? startItem : 0;
+                document.getElementById('currentEnd').textContent = endItem;
+                document.getElementById('totalCount').textContent = totalItems;
+                document.getElementById('pageInfo').textContent = `الصفحة ${this.currentPage} من ${totalPages}`;
+            }
+
+            filterOrders() {
+                const filters = {
+                    search: document.getElementById('searchInput')?.value || '',
+                    status: document.getElementById('statusFilter')?.value || '',
+                    serviceType: document.getElementById('serviceFilter')?.value || '',
+                    priority: document.getElementById('priorityFilter')?.value || ''
+                };
+
+                this.dataManager.filterOrders(filters);
+                this.currentPage = 1; // Reset to first page
+                this.renderOrders();
+            }
+
+            changePage(direction) {
+                const totalPages = Math.ceil(this.dataManager.filteredOrders.length / CONFIG.PAGINATION.itemsPerPage);
+                const newPage = this.currentPage + direction;
+
+                if (newPage >= 1 && newPage <= totalPages) {
+                    this.currentPage = newPage;
+                    this.renderOrders();
+                }
+            }
+
+            showAddOrderModal() {
+                document.getElementById('addOrderModal').classList.remove('hidden');
+                document.getElementById('clientName').focus();
+            }
+
+            hideAddOrderModal() {
+                document.getElementById('addOrderModal').classList.add('hidden');
+            }
+
+            editOrder(orderId) {
+                const order = this.dataManager.getOrder(orderId);
+                if (!order) return;
+
+                // For now, show a simple edit notification
+                // In a full implementation, this would open an edit modal
+                this.notifications.info(`تعديل الطلب ${order.orderNumber} - قريباً!`);
+            }
+
+            viewOrder(orderId) {
+                const order = this.dataManager.getOrder(orderId);
+                if (!order) return;
+
+                const client = this.dataManager.getClient(order.clientId);
+                const details = `
+                    <strong>رقم الطلب:</strong> ${order.orderNumber}<br>
+                    <strong>العميل:</strong> ${client?.name || 'غير محدد'}<br>
+                    <strong>الخدمة:</strong> ${CONFIG.SERVICE_TYPES[order.serviceType]?.ar}<br>
+                    <strong>العنوان:</strong> ${order.title}<br>
+                    <strong>الوصف:</strong> ${order.description}
+                `;
+
+                this.notifications.info(details, { duration: 8000 });
+            }
+
+            deleteOrder(orderId) {
+                const order = this.dataManager.getOrder(orderId);
+                if (!order) return;
+
+                this.notifications.confirm(
+                    `هل أنت متأكد من حذف الطلب ${order.orderNumber}؟`,
+                    () => {
+                        if (this.dataManager.deleteOrder(orderId)) {
+                            this.notifications.success('تم حذف الطلب بنجاح');
+                            this.updateStatistics();
+                            this.renderOrders();
+                        } else {
+                            this.notifications.error('حدث خطأ أثناء حذف الطلب');
+                        }
+                    }
+                );
+            }
+
+            exportData() {
+                const csvData = this.dataManager.exportToCSV();
+                const filename = `orders_export_${new Date().toISOString().split('T')[0]}.csv`;
+                Utils.downloadFile(csvData, filename, 'text/csv;charset=utf-8');
+                this.notifications.success('تم تصدير البيانات بنجاح! 📊');
+            }
+
+            toggleTheme() {
+                this.isDarkMode = !this.isDarkMode;
+                localStorage.setItem(CONFIG.STORAGE_KEYS.theme, this.isDarkMode ? 'dark' : 'light');
+                this.applyTheme();
+                this.notifications.info(`تم تغيير المظهر إلى ${this.isDarkMode ? 'الليلي' : 'النهاري'} 🌙`);
+            }
+
+            applyTheme() {
+                if (this.isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+            }
+        }
+
+        // ===== Global Functions =====
+        function showAddOrderModal() {
+            app.showAddOrderModal();
+        }
+
+        function hideAddOrderModal() {
+            app.hideAddOrderModal();
+        }
+
+        function filterOrders() {
+            app.filterOrders();
+        }
+
+        function changePage(direction) {
+            app.changePage(direction);
+        }
+
+        function exportData() {
+            app.exportData();
+        }
+
+        function toggleTheme() {
+            app.toggleTheme();
+        }
+
+        // ===== Initialize Application =====
+        let app;
+        let notifications;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new OrderManagementApp();
+            notifications = app.notifications; // Make notifications globally accessible
+        });
+
+        // ===== Service Worker Registration (للعمل دون اتصال) =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
