@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#1e40af">
+    <title>نظام إدارة الطلبات - السجلات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'arabic': ['Tajawal', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Tajawal', Arial, sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-processing { background-color: #dbeafe; color: #1e40af; }
+        .status-completed { background-color: #d1fae5; color: #065f46; }
+        .status-rejected { background-color: #fee2e2; color: #991b1b; }
+        .status-revision { background-color: #fef3c7; color: #d97706; }
+        
+        .file-drop-zone {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        .file-drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .recording {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .revision-notice {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-left: 4px solid #d97706;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                transform: translateY(-100px);
+            }
+            .notification.show {
+                transform: translateY(0);
+            }
+            
+            /* Fix modal positioning on mobile */
+            .fixed {
+                position: fixed !important;
+            }
+            
+            .modal-content {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            /* Improve table responsiveness */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Better button spacing on mobile */
+            .mobile-stack > * {
+                margin-bottom: 0.5rem;
+            }
+            
+            .mobile-stack > *:last-child {
+                margin-bottom: 0;
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .filter-chip {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-chip:hover {
+            transform: scale(1.05);
+        }
+        
+        .filter-chip.active {
+            background-color: #1e40af;
+            color: white;
+        }
+        
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="bg-white/20 p-2 rounded-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">نظام إدارة الطلبات</h1>
+                        <p class="text-blue-100">السجلات والتقارير</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <button onclick="exportRecords()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        تصدير
+                    </button>
+                    <button onclick="showNewOrderModal()" class="bg-white text-blue-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-medium transition-colors">
+                        + طلب جديد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow card-hover p-6">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="mr-4">
+                        <p class="text-sm font-medium text-gray-600">إجمالي الطلبات</p>
+                        <p class="text-2xl font-bold text-gray-900" id="totalOrders">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow card-hover p-6">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="mr-4">
+                        <p class="text-sm font-medium text-gray-600">قيد المراجعة</p>
+                        <p class="text-2xl font-bold text-gray-900" id="pendingOrders">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow card-hover p-6">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="mr-4">
+                        <p class="text-sm font-medium text-gray-600">مكتملة</p>
+                        <p class="text-2xl font-bold text-gray-900" id="completedOrders">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow card-hover p-6">
+                <div class="flex items-center">
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="mr-4">
+                        <p class="text-sm font-medium text-gray-600">مرفوضة</p>
+                        <p class="text-2xl font-bold text-gray-900" id="rejectedOrders">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 sm:space-x-reverse">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="البحث في الطلبات..." 
+                               class="w-full sm:w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <svg class="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    
+                    <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending">قيد المراجعة</option>
+                        <option value="processing">قيد المعالجة</option>
+                        <option value="completed">مكتملة</option>
+                        <option value="rejected">مرفوضة</option>
+                        <option value="revision">تحتاج مراجعة</option>
+                    </select>
+                    
+                    <input type="date" id="dateFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <span class="text-sm text-gray-600">عرض:</span>
+                    <select id="recordsPerPage" class="px-3 py-1 border border-gray-300 rounded text-sm">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-sm text-gray-600">سجل</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Records Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto table-container">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم الطلب</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم العميل</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع الخدمة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ الإنشاء</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">آخر تحديث</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Records will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button id="prevPageMobile" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        السابق
+                    </button>
+                    <button id="nextPageMobile" class="mr-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        التالي
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            عرض <span id="startRecord" class="font-medium">1</span> إلى <span id="endRecord" class="font-medium">25</span> من <span id="totalRecords" class="font-medium">0</span> سجل
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" id="pagination">
+                            <!-- Pagination buttons will be generated here -->
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- New Order Modal -->
+    <div id="newOrderModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full modal-content">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">طلب جديد</h3>
+                </div>
+                <form id="newOrderForm" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
+                        <input type="text" id="clientName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
+                        <input type="tel" id="clientPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">نوع الخدمة</label>
+                        <select id="serviceType" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">اختر نوع الخدمة</option>
+                            <option value="translation">ترجمة</option>
+                            <option value="editing">تحرير وتدقيق</option>
+                            <option value="design">تصميم</option>
+                            <option value="writing">كتابة محتوى</option>
+                            <option value="research">بحث أكاديمي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">وصف الطلب</label>
+                        <textarea id="orderDescription" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الملفات المرفقة</label>
+                        <div class="file-drop-zone border-2 border-dashed border-gray-300 rounded-lg p-6 text-center" id="fileDropZone">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="mt-4">
+                                <label for="fileInput" class="cursor-pointer">
+                                    <span class="mt-2 block text-sm font-medium text-gray-900">اسحب الملفات هنا أو</span>
+                                    <span class="text-blue-600 hover:text-blue-500">انقر للتصفح</span>
+                                </label>
+                                <input id="fileInput" name="fileInput" type="file" class="sr-only" multiple accept=".pdf,.doc,.docx,.jpg,.png,.txt">
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG حتى 10 ميجابايت</p>
+                        </div>
+                        <div id="fileList" class="mt-2 space-y-2"></div>
+                    </div>
+                </form>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3 space-x-reverse">
+                    <button type="button" onclick="closeNewOrderModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        إلغاء
+                    </button>
+                    <button type="submit" form="newOrderForm" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                        إرسال الطلب
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full modal-content">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">تفاصيل الطلب</h3>
+                    <button onclick="closeOrderDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="orderDetailsContent" class="p-6">
+                    <!-- Order details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg id="notificationIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <!-- Icon will be set dynamically -->
+                    </svg>
+                </div>
+                <div class="mr-3 w-0 flex-1">
+                    <p id="notificationTitle" class="text-sm font-medium text-gray-900"></p>
+                    <p id="notificationMessage" class="mt-1 text-sm text-gray-500"></p>
+                </div>
+                <div class="mr-4 flex-shrink-0 flex">
+                    <button onclick="hideNotification()" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        let orders = [
+            {
+                id: 'ORD-001',
+                clientName: 'أحمد محمد',
+                phone: '0501234567',
+                serviceType: 'ترجمة',
+                description: 'ترجمة وثائق قانونية من الإنجليزية إلى العربية',
+                status: 'completed',
+                createdDate: '2024-01-15',
+                lastUpdate: '2024-01-20',
+                files: ['contract.pdf', 'legal_docs.docx']
+            },
+            {
+                id: 'ORD-002',
+                clientName: 'فاطمة أحمد',
+                phone: '0507654321',
+                serviceType: 'تحرير وتدقيق',
+                description: 'تدقيق لغوي لرسالة ماجستير في الأدب العربي',
+                status: 'processing',
+                createdDate: '2024-01-18',
+                lastUpdate: '2024-01-19',
+                files: ['thesis.docx']
+            },
+            {
+                id: 'ORD-003',
+                clientName: 'خالد عبدالله',
+                phone: '0551239876',
+                serviceType: 'تصميم',
+                description: 'تصميم هوية بصرية لشركة ناشئة',
+                status: 'pending',
+                createdDate: '2024-01-20',
+                lastUpdate: '2024-01-20',
+                files: ['brief.pdf', 'references.zip']
+            },
+            {
+                id: 'ORD-004',
+                clientName: 'سارة الزهراني',
+                phone: '0598765432',
+                serviceType: 'كتابة محتوى',
+                description: 'كتابة محتوى تسويقي لموقع إلكتروني',
+                status: 'revision',
+                createdDate: '2024-01-16',
+                lastUpdate: '2024-01-21',
+                files: ['guidelines.docx']
+            },
+            {
+                id: 'ORD-005',
+                clientName: 'محمد العتيبي',
+                phone: '0543217890',
+                serviceType: 'بحث أكاديمي',
+                description: 'إعداد بحث في مجال تكنولوجيا المعلومات',
+                status: 'rejected',
+                createdDate: '2024-01-12',
+                lastUpdate: '2024-01-14',
+                files: ['requirements.pdf']
+            }
+        ];
+
+        let currentPage = 1;
+        let recordsPerPage = 25;
+        let filteredOrders = [...orders];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            renderTable();
+            setupEventListeners();
+            loadSampleData();
+        });
+
+        function loadSampleData() {
+            // Add more sample data for better demonstration
+            for (let i = 6; i <= 50; i++) {
+                const statuses = ['pending', 'processing', 'completed', 'rejected', 'revision'];
+                const services = ['ترجمة', 'تحرير وتدقيق', 'تصميم', 'كتابة محتوى', 'بحث أكاديمي'];
+                const names = ['علي أحمد', 'نورا محمد', 'عبدالله خالد', 'هند عبدالعزيز', 'عمر السعيد'];
+                
+                orders.push({
+                    id: `ORD-${String(i).padStart(3, '0')}`,
+                    clientName: names[Math.floor(Math.random() * names.length)],
+                    phone: '050' + Math.floor(Math.random() * 9000000 + 1000000),
+                    serviceType: services[Math.floor(Math.random() * services.length)],
+                    description: 'وصف الطلب رقم ' + i,
+                    status: statuses[Math.floor(Math.random() * statuses.length)],
+                    createdDate: new Date(2024, 0, Math.floor(Math.random() * 21) + 1).toISOString().split('T')[0],
+                    lastUpdate: new Date(2024, 0, Math.floor(Math.random() * 21) + 1).toISOString().split('T')[0],
+                    files: ['file1.pdf']
+                });
+            }
+            
+            filteredOrders = [...orders];
+            updateStats();
+            renderTable();
+        }
+
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filteredOrders = orders.filter(order => 
+                    order.clientName.toLowerCase().includes(searchTerm) ||
+                    order.id.toLowerCase().includes(searchTerm) ||
+                    order.serviceType.toLowerCase().includes(searchTerm) ||
+                    order.description.toLowerCase().includes(searchTerm)
+                );
+                currentPage = 1;
+                renderTable();
+            });
+
+            // Status filter
+            document.getElementById('statusFilter').addEventListener('change', function() {
+                const selectedStatus = this.value;
+                if (selectedStatus) {
+                    filteredOrders = orders.filter(order => order.status === selectedStatus);
+                } else {
+                    filteredOrders = [...orders];
+                }
+                currentPage = 1;
+                renderTable();
+            });
+
+            // Date filter
+            document.getElementById('dateFilter').addEventListener('change', function() {
+                const selectedDate = this.value;
+                if (selectedDate) {
+                    filteredOrders = orders.filter(order => order.createdDate === selectedDate);
+                } else {
+                    filteredOrders = [...orders];
+                }
+                currentPage = 1;
+                renderTable();
+            });
+
+            // Records per page
+            document.getElementById('recordsPerPage').addEventListener('change', function() {
+                recordsPerPage = parseInt(this.value);
+                currentPage = 1;
+                renderTable();
+            });
+
+            // New order form
+            document.getElementById('newOrderForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitNewOrder();
+            });
+
+            // File upload
+            setupFileUpload();
+        }
+
+        function setupFileUpload() {
+            const dropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileList = document.getElementById('fileList');
+
+            // Drag and drop functionality
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                fileList.innerHTML = '';
+                for (let file of files) {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between p-2 bg-gray-50 rounded';
+                    fileItem.innerHTML = `
+                        <span class="text-sm text-gray-700">${file.name}</span>
+                        <button type="button" onclick="removeFile(this)" class="text-red-600 hover:text-red-800">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    fileList.appendChild(fileItem);
+                }
+            }
+        }
+
+        function removeFile(button) {
+            button.parentElement.remove();
+        }
+
+        function updateStats() {
+            const total = orders.length;
+            const pending = orders.filter(order => order.status === 'pending').length;
+            const completed = orders.filter(order => order.status === 'completed').length;
+            const rejected = orders.filter(order => order.status === 'rejected').length;
+
+            document.getElementById('totalOrders').textContent = total;
+            document.getElementById('pendingOrders').textContent = pending;
+            document.getElementById('completedOrders').textContent = completed;
+            document.getElementById('rejectedOrders').textContent = rejected;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('recordsTableBody');
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, filteredOrders.length);
+            const pageOrders = filteredOrders.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '';
+
+            pageOrders.forEach(order => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 fade-in';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.clientName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${order.serviceType}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-${order.status}">
+                            ${getStatusText(order.status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(order.createdDate)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(order.lastUpdate)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2 space-x-reverse">
+                            <button onclick="viewOrderDetails('${order.id}')" class="text-blue-600 hover:text-blue-900">عرض</button>
+                            <button onclick="editOrder('${order.id}')" class="text-green-600 hover:text-green-900">تعديل</button>
+                            <button onclick="deleteOrder('${order.id}')" class="text-red-600 hover:text-red-900">حذف</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updatePagination();
+            updateRecordsInfo();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredOrders.length / recordsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            pagination.innerHTML = '';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.innerHTML = 'السابق';
+            prevButton.className = `relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}`;
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            };
+            pagination.appendChild(prevButton);
+
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.innerHTML = i;
+                pageButton.className = `relative inline-flex items-center px-4 py-2 border text-sm font-medium ${i === currentPage ? 'z-10 bg-blue-50 border-blue-500 text-blue-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`;
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    renderTable();
+                };
+                pagination.appendChild(pageButton);
+            }
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.innerHTML = 'التالي';
+            nextButton.className = `relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}`;
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTable();
+                }
+            };
+            pagination.appendChild(nextButton);
+        }
+
+        function updateRecordsInfo() {
+            const startRecord = (currentPage - 1) * recordsPerPage + 1;
+            const endRecord = Math.min(currentPage * recordsPerPage, filteredOrders.length);
+            
+            document.getElementById('startRecord').textContent = startRecord;
+            document.getElementById('endRecord').textContent = endRecord;
+            document.getElementById('totalRecords').textContent = filteredOrders.length;
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'قيد المراجعة',
+                'processing': 'قيد المعالجة',
+                'completed': 'مكتملة',
+                'rejected': 'مرفوضة',
+                'revision': 'تحتاج مراجعة'
+            };
+            return statusMap[status] || status;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA');
+        }
+
+        function showNewOrderModal() {
+            document.getElementById('newOrderModal').classList.remove('hidden');
+        }
+
+        function closeNewOrderModal() {
+            document.getElementById('newOrderModal').classList.add('hidden');
+            document.getElementById('newOrderForm').reset();
+            document.getElementById('fileList').innerHTML = '';
+        }
+
+        function submitNewOrder() {
+            const formData = new FormData(document.getElementById('newOrderForm'));
+            
+            const newOrder = {
+                id: 'ORD-' + String(orders.length + 1).padStart(3, '0'),
+                clientName: document.getElementById('clientName').value,
+                phone: document.getElementById('clientPhone').value,
+                serviceType: document.getElementById('serviceType').value,
+                description: document.getElementById('orderDescription').value,
+                status: 'pending',
+                createdDate: new Date().toISOString().split('T')[0],
+                lastUpdate: new Date().toISOString().split('T')[0],
+                files: []
+            };
+
+            orders.unshift(newOrder);
+            filteredOrders = [...orders];
+            updateStats();
+            renderTable();
+            closeNewOrderModal();
+            
+            showNotification('تم إرسال الطلب بنجاح', 'سيتم مراجعة طلبك والرد عليك في أقرب وقت', 'success');
+        }
+
+        function viewOrderDetails(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const modal = document.getElementById('orderDetailsModal');
+            const content = document.getElementById('orderDetailsContent');
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">رقم الطلب</label>
+                            <p class="mt-1 text-sm text-gray-900">${order.id}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">الحالة</label>
+                            <span class="mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-${order.status}">
+                                ${getStatusText(order.status)}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">اسم العميل</label>
+                            <p class="mt-1 text-sm text-gray-900">${order.clientName}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">رقم الهاتف</label>
+                            <p class="mt-1 text-sm text-gray-900">${order.phone}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">نوع الخدمة</label>
+                            <p class="mt-1 text-sm text-gray-900">${order.serviceType}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">تاريخ الإنشاء</label>
+                            <p class="mt-1 text-sm text-gray-900">${formatDate(order.createdDate)}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">وصف الطلب</label>
+                        <p class="mt-1 text-sm text-gray-900 p-3 bg-gray-50 rounded-md">${order.description}</p>
+                    </div>
+                    
+                    ${order.files && order.files.length > 0 ? `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الملفات المرفقة</label>
+                        <div class="space-y-2">
+                            ${order.files.map(file => `
+                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                    <span class="text-sm text-gray-700">${file}</span>
+                                    <button class="text-blue-600 hover:text-blue-800 text-sm">تحميل</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="flex space-x-3 space-x-reverse">
+                        <button onclick="updateOrderStatus('${order.id}', 'processing')" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            بدء المعالجة
+                        </button>
+                        <button onclick="updateOrderStatus('${order.id}', 'completed')" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            إكمال الطلب
+                        </button>
+                        <button onclick="updateOrderStatus('${order.id}', 'revision')" 
+                                class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">
+                            طلب مراجعة
+                        </button>
+                        <button onclick="updateOrderStatus('${order.id}', 'rejected')" 
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                            رفض الطلب
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeOrderDetailsModal() {
+            document.getElementById('orderDetailsModal').classList.add('hidden');
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            const orderIndex = orders.findIndex(o => o.id === orderId);
+            if (orderIndex !== -1) {
+                orders[orderIndex].status = newStatus;
+                orders[orderIndex].lastUpdate = new Date().toISOString().split('T')[0];
+                
+                filteredOrders = [...orders];
+                updateStats();
+                renderTable();
+                closeOrderDetailsModal();
+                
+                showNotification('تم تحديث حالة الطلب', `تم تغيير حالة الطلب إلى: ${getStatusText(newStatus)}`, 'success');
+            }
+        }
+
+        function editOrder(orderId) {
+            showNotification('قيد التطوير', 'ميزة تعديل الطلبات قيد التطوير', 'info');
+        }
+
+        function deleteOrder(orderId) {
+            if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+                const orderIndex = orders.findIndex(o => o.id === orderId);
+                if (orderIndex !== -1) {
+                    orders.splice(orderIndex, 1);
+                    filteredOrders = [...orders];
+                    updateStats();
+                    renderTable();
+                    
+                    showNotification('تم حذف الطلب', 'تم حذف الطلب بنجاح', 'success');
+                }
+            }
+        }
+
+        function exportRecords() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "رقم الطلب,اسم العميل,رقم الهاتف,نوع الخدمة,الحالة,تاريخ الإنشاء,آخر تحديث\n"
+                + filteredOrders.map(order => 
+                    `${order.id},${order.clientName},${order.phone},${order.serviceType},${getStatusText(order.status)},${order.createdDate},${order.lastUpdate}`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "orders_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('تم التصدير بنجاح', 'تم تصدير البيانات إلى ملف CSV', 'success');
+        }
+
+        function showNotification(title, message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notificationIcon');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            // Set icon based on type
+            const icons = {
+                success: '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>',
+                error: '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>',
+                info: '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>'
+            };
+            
+            icon.innerHTML = icons[type] || icons.info;
+            icon.className = `w-5 h-5 ${type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-blue-600'}`;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                hideNotification();
+            }, 5000);
+        }
+
+        function hideNotification() {
+            document.getElementById('notification').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
